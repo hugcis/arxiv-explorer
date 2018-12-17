@@ -1,9 +1,8 @@
-import json
-import pickle
-import ot
 import os
+import pickle
 import sys
 
+import ot
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from django.http import HttpResponse, Http404
@@ -17,12 +16,18 @@ from sklearn.metrics.pairwise import euclidean_distances
 
 from  .initiate import papers_authors_in_db
 from .models import Paper, Author
-from .serializers import (AuthorSerializer, 
-                          PaperSerializer, 
+from .serializers import (AuthorSerializer,
+                          PaperSerializer,
                           PaperWithAuthors,
                           PaperWithAuthorsSerializer)
 
 def get_tfidf() -> TfidfVectorizer:
+    """ This function either loads a serialized (pickled) representation of
+    a TF-IDF vectorizer trained on all words from the abstracts of all papers
+    if it exists, or creates it and saves it.
+    TODO: Implement a refresh funcitonality to update the vectorizer as papers
+    are added
+    """
     if 'vectorizer.pkl' in os.listdir():
         return pickle.load(open('vectorizer.pkl', 'rb'))
     else:
@@ -32,56 +37,69 @@ def get_tfidf() -> TfidfVectorizer:
 
         return tfidf
 
+# Load the TF-IDF vectorizer in memory for efficiency in response time
 TFIDF = get_tfidf()
 
 class PaperPagination(PageNumberPagination):
+    """ The pagination class for returning the results.
+    """
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 20
 
 class AuthorsList(generics.ListAPIView):
+    """ API view returning a list of authors.
+    """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 class AuthorsDetails(generics.RetrieveAPIView):
+    """ API view returning a single author.
+    """
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
 
 class PapersList(generics.ListAPIView):
+    """ API view returning a list of papers.
+    """
     queryset = Paper.objects.all()
     serializer_class = PaperSerializer
     pagination_class = PaperPagination
 
 class PapersDetails(generics.RetrieveAPIView):
+    """ API view returning a single paper.
+    """
     queryset = Paper.objects.all()
     serializer_class = PaperSerializer
 
 class LatestPapersDetails(generics.ListAPIView):
+    """ API view returning the latest papers.
+    """
     queryset = Paper.objects.all()
     serializer_class = PaperWithAuthorsSerializer
     pagination_class = PaperPagination
 
     def list(self, request: Request) -> Response:
         categories = request.GET.get('categories')
-        if categories is not None: 
+        if categories is not None:
             categories = categories.split(',')
 
         keywords = request.GET.get('keywords')
-        if keywords is not None: 
+        if keywords is not None:
             keywords = keywords.split(',')
 
         base_queryset = self.get_queryset()
         if categories is not None:
             for category in categories:
                 base_queryset = base_queryset.filter(categories__contains=[category])
-        
+
         if keywords is not None:
             for word in keywords:
                 base_queryset = base_queryset.filter(abstract__icontains=word)
-        
+
         queryset = self.paginate_queryset(base_queryset.order_by('-date'))
-        
+
         serializer = self.get_serializer(
             [PaperWithAuthors(paper, paper.authorship_set.all()) for paper in queryset], 
             many=True
@@ -91,13 +109,15 @@ class LatestPapersDetails(generics.ListAPIView):
 
 
 class PapersDetailsByDOI(generics.RetrieveAPIView):
+    """ API view returning a single paper from its doi.
+    """
     queryset = Paper.objects.all()
     serializer_class = PaperSerializer
     lookup_field = 'doi'
 
 
 class PaperNeighbors(APIView):
-    def get(self, request, doi, format=None):
+    def get(self, request, doi):
         
         phrases = []
         dates = []
