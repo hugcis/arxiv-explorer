@@ -2,7 +2,7 @@ import os
 import pickle
 import sys
 
-import ot
+#import ot
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 from django.http import HttpResponse, Http404
