@@ -5,7 +5,7 @@ matplotlib==1.5
 scipy==0.17
 psycopg2
 POT==0.4.0
-tensorflow==1.7.0
+tensorflow==1.15.2
 django>=2.0.8
 nltk==3.2.4
 fastText==0.8.3
