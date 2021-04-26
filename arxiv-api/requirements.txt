@@ -1,4 +1,4 @@
-lxml==4.1.0
+lxml==4.6.3
 Cython==0.28.2
 numpy==1.14.2 
 matplotlib==1.5
@@ -9,6 +9,6 @@ tensorflow==1.7.0
 django>=2.0.8
 nltk==3.2.4
 fastText==0.8.3
-djangorestframework==3.8.2
+djangorestframework==3.11.2
 scikit_learn==0.19.1
 django-cors-headers
