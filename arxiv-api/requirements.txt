@@ -1,4 +1,4 @@
-lxml==4.6.5
+lxml==4.9.1
 Cython==0.28.2
 numpy==1.22.0 
 matplotlib==1.5
